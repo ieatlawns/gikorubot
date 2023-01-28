@@ -27,6 +27,8 @@ with (open(r"src\minesweeper.obj", "rb")) as openfile:
             pickle_jar.append(pickle.load(openfile))
         except EOFError:
             break
+minesweeper_options = []
+logging.info(pickle_jar)
 
 @bot.event
 async def on_ready():
@@ -135,7 +137,8 @@ async def upyourass(ctx):
 @bot.slash_command(name = "minesweeper", description = "Play minesweeper.")
 async def minesweeper(ctx,
     gamemode: discord.Option(str,
-        choices=['standard', 'knight', "cross", "x", "carpenter"]),
+        "The minesweeper variant you want to play.",
+        choices=pickle_jar[1].keys()),
     width: discord.Option(int,
         "Width of area. (Default 9.)",
         default=9,
@@ -173,7 +176,7 @@ async def minesweeper(ctx,
                         if minesweep[y+dy][x+dx] == "💥":
                             total += 1
                 minesweep[y][x] = pickle_jar[0][total]
-    response = f"Minesweeper | {height}x{width} | ||{mines}|| mines"
+    response = f"**{pickle_jar[1][gamemode]['name']}**: {pickle_jar[1][gamemode]['description']} {height}x{width} | ||{mines}|| mines"
     for x in range(width):
         response += "\n"
         for y in range(height):
