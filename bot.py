@@ -152,10 +152,10 @@ async def minesweeper(ctx,
         "Percentage of squares that are mines. (Default 30)",
         default=30,
         min_value = 1,
-        max_value = 99)):
+        max_value = 90)):
     mines = math.floor((width*height-8)*(mines/100))
     minesweep = [ [0]*width for i in range(height)]
-    safe_tile = [math.floor(height/2)-1,math.floor(width/2)-1]
+    safe_tile = [math.ceil(height/2)-1,math.ceil(width/2)-1]
     zeros = [[safe_tile[0], safe_tile[1]]]
     for (dx, dy) in pickle_jar[1][gamemode]["data"]:
         if safe_tile[1]+dx >= 0 and safe_tile[1]+dx < width and safe_tile[0]+dy >= 0 and safe_tile[0]+dy < height:
