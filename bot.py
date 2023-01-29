@@ -139,47 +139,47 @@ async def minesweeper(ctx,
     gamemode: discord.Option(str,
         "The minesweeper variant you want to play.",
         choices=pickle_jar[1].keys()),
-    width: discord.Option(int,
-        "Width of area. (Default 9.)",
-        default=9,
-        max_value = 14,
-        min_value = 2),
     height: discord.Option(int,
-        "Height of the area. (Default 10.)",
+        "Height of the area. (Default 9.)",
+        default=9,
+        max_value = 10,
+        min_value = 2),
+    width: discord.Option(int,
+        "Width of the area. (Default 10.)",
         default = 10,
         max_value = 14, min_value = 2),
     mines: discord.Option(int,
         "Percentage of squares that are mines. (Default 30)",
         default=30,
         min_value = 1,
-        max_value = 90)):
-    mines = math.floor((width*height-8)*(mines/100))
-    minesweep = [ [0]*width for i in range(height)]
-    safe_tile = [math.ceil(height/2)-1,math.ceil(width/2)-1]
+        max_value = 99)):
+    mines = math.floor((height*width-len(pickle_jar[1][gamemode]["data"]))*(mines/100))
+    minesweep = [ [0]*height for i in range(width)]
+    safe_tile = [math.ceil(width/2)-1,math.ceil(height/2)-1]
     zeros = [[safe_tile[0], safe_tile[1]]]
     for (dx, dy) in pickle_jar[1][gamemode]["data"]:
-        if safe_tile[1]+dx >= 0 and safe_tile[1]+dx < width and safe_tile[0]+dy >= 0 and safe_tile[0]+dy < height:
+        if safe_tile[1]+dx >= 0 and safe_tile[1]+dx < height and safe_tile[0]+dy >= 0 and safe_tile[0]+dy < width:
             zeros.append([safe_tile[0]+dy, safe_tile[1]+dx])
     m = 0
     while m < mines:
-        a = random.randint(0, height-1)
-        b = random.randint(0, width-1)
+        a = random.randint(0, width-1)
+        b = random.randint(0, height-1)
         if minesweep[a][b] != "💥" and [a, b] not in zeros:
             minesweep[a][b] = "💥"
             m += 1
-    for x in range(width):
-        for y in range(height):
+    for x in range(height):
+        for y in range(width):
             if minesweep[y][x] != "💥":
                 total = 0
                 for (dx, dy) in pickle_jar[1][gamemode]["data"]:
-                    if x+dx >= 0 and x+dx < width and y+dy >= 0 and y+dy < height:
+                    if x+dx >= 0 and x+dx < height and y+dy >= 0 and y+dy < width:
                         if minesweep[y+dy][x+dx] == "💥":
                             total += 1
                 minesweep[y][x] = pickle_jar[0][total]
-    response = f"**{pickle_jar[1][gamemode]['name']}**: {pickle_jar[1][gamemode]['description']} {height}x{width} | ||{mines}|| mines"
-    for x in range(width):
+    response = f"**{pickle_jar[1][gamemode]['name']}**: {pickle_jar[1][gamemode]['description']} {width}x{height} | ||{mines}|| mines"
+    for x in range(height):
         response += "\n"
-        for y in range(height):
+        for y in range(width):
             if x == safe_tile[1] and y == safe_tile[0]:
                 response += f"{minesweep[y][x]}"
             else:
