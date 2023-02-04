@@ -5,7 +5,7 @@
 ### python
 
 + Python 3+
-+ `pycord`, `bing_image_urls`
++ `pycord`, `bing_image_urls`, `youtube-dl`
 
 ### system
 

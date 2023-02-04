@@ -8,6 +8,7 @@ import ffmpeg
 from dotenv import load_dotenv
 from bing_image_urls import bing_image_urls
 from src.tiktok_module import downloader
+import youtube_dl
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
 load_dotenv() # load all the variables from the env file
@@ -44,20 +45,21 @@ async def ping(ctx):
     name = "savetwtvid",
     description = "Saves a video on twitter as an mp4.")
 async def savetwtvid(ctx,link: discord.Option(str)):
-    try:
-        requestid = random.randint(0, 999999)
-        await ctx.respond("Getting your twitter video...")
-        output = link.split("?")
-        await ctx.channel.trigger_typing()
-        os.system(
-            f"{os.getcwd()}\\src\\twitter-video-dl.py {output[0]} tw{requestid}s{ctx.author.id}.mp4"
-            )
-        await ctx.send(file=discord.File(f"{os.getcwd()}\\tw{requestid}s{ctx.author.id}.mp4"))
-        os.remove(f'{os.getcwd()}\\tw{requestid}s{ctx.author.id}.mp4')
-    except Exception:
-        await ctx.send("Something went wrong. It could be from any of the following: \
-        \n> the video is too long,\n> the content is age-restricted, \
-        \n> the tweet is from a private account, or\n> the link is not a twitter link.")
+    if "twitter.com" in link:
+        try:
+            requestid = random.randint(0, 999999)
+            await ctx.respond("Getting your twitter video...")
+            await ctx.channel.trigger_typing()
+            with youtube_dl.YoutubeDL({'outtmpl': f'{os.getcwd()}/tw{requestid}s{ctx.author.id}.mp4'}) as ydl:
+                ydl.download([link])
+            await ctx.send(file=discord.File(f"{os.getcwd()}\\tw{requestid}s{ctx.author.id}.mp4"))
+            os.remove(f'{os.getcwd()}\\tw{requestid}s{ctx.author.id}.mp4')
+        except Exception:
+            await ctx.send("Something went wrong. It could be from any of the following: \
+            \n> the video is too long \
+            \n> the content is age-restricted, \
+            \n> the tweet is from a private account, or \
+            \n> the link is not a twitter link.")
 
 @bot.slash_command(
     name = "savetiktok",
@@ -109,20 +111,21 @@ async def compress(ctx,
     name = "compresstwt",
     description = "Poorly compresses a video from a twitter link.")
 async def compresstwt(ctx, link: discord.Option(str, "Link to video.")):
-    try:
-        requestid = random.randint(0, 999999)
-        await ctx.respond("Boiling your twitter video...")
-        output = link.split("?")
-        await ctx.channel.trigger_typing()
-        os.system(f"{os.getcwd()}\\src\\twitter-video-dl.py {output[0]} {requestid}sc{ctx.author.id}unboiled.mp4")
-    except Exception:
-        await ctx.send("Something went wrong. It could be from any of the following:\n> the video is too long,\n> the content is age-restricted,\n> the tweet is from a private account, or\n> the link is not a twitter link.")
-    stream = ffmpeg.input(f"{requestid}sc{ctx.author.id}unboiled.mp4")
-    stream = stream.output(f"{requestid}sc{ctx.author.id}.mp4", video_bitrate=8000, audio_bitrate=000)
-    ffmpeg.run(stream)
-    os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}unboiled.mp4')
-    await ctx.send(file=discord.File(f"{requestid}sc{ctx.author.id}.mp4"))
-    os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}.mp4')
+    if "twitter.com" in link:
+        try:
+            requestid = random.randint(0, 999999)
+            await ctx.respond("Getting your twitter video...")
+            await ctx.channel.trigger_typing()
+            with youtube_dl.YoutubeDL({'outtmpl': f'{os.getcwd()}/tw{requestid}s{ctx.author.id}.mp4'}) as ydl:
+                ydl.download([link])
+        except Exception:
+            await ctx.send("Something went wrong. It could be from any of the following:\n> the video is too long,\n> the content is age-restricted,\n> the tweet is from a private account, or\n> the link is not a twitter link.")
+        stream = ffmpeg.input(f"{requestid}sc{ctx.author.id}unboiled.mp4")
+        stream = stream.output(f"{requestid}sc{ctx.author.id}.mp4", video_bitrate=8000, audio_bitrate=000)
+        ffmpeg.run(stream)
+        os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}unboiled.mp4')
+        await ctx.send(file=discord.File(f"{requestid}sc{ctx.author.id}.mp4"))
+        os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}.mp4')
 
 @bot.slash_command(name = "upyourass", description = "Would you put this up your ass?")
 async def upyourass(ctx):
@@ -154,7 +157,7 @@ async def minesweeper(ctx,
         min_value = 1,
         max_value = 99)):
     mines = math.floor((height*width-len(pickle_jar[1][gamemode]["data"]))*(mines/100))
-    minesweep = [ [0]*height for i in range(width)]
+    minesweep_board = [ [0]*height for i in range(width)]
     safe_tile = [math.ceil(width/2)-1,math.ceil(height/2)-1]
     zeros = [[safe_tile[0], safe_tile[1]]]
     for (dx, dy) in pickle_jar[1][gamemode]["data"]:
@@ -164,25 +167,25 @@ async def minesweeper(ctx,
     while m < mines:
         a = random.randint(0, width-1)
         b = random.randint(0, height-1)
-        if minesweep[a][b] != "💥" and [a, b] not in zeros:
-            minesweep[a][b] = "💥"
+        if minesweep_board[a][b] != "💥" and [a, b] not in zeros:
+            minesweep_board[a][b] = "💥"
             m += 1
     for x in range(height):
         for y in range(width):
-            if minesweep[y][x] != "💥":
+            if minesweep_board[y][x] != "💥":
                 total = 0
                 for (dx, dy) in pickle_jar[1][gamemode]["data"]:
                     if x+dx >= 0 and x+dx < height and y+dy >= 0 and y+dy < width:
-                        if minesweep[y+dy][x+dx] == "💥":
+                        if minesweep_board[y+dy][x+dx] == "💥":
                             total += 1
-                minesweep[y][x] = pickle_jar[0][total]
+                minesweep_board[y][x] = pickle_jar[0][total]
     response = f"**{pickle_jar[1][gamemode]['name']}**: {pickle_jar[1][gamemode]['description']} {width}x{height} | ||{mines}|| mines"
     for x in range(height):
         response += "\n"
         for y in range(width):
             if x == safe_tile[1] and y == safe_tile[0]:
-                response += f"{minesweep[y][x]}"
+                response += f"{minesweep_board[y][x]}"
             else:
-                response += f"||{minesweep[y][x]}||"
+                response += f"||{minesweep_board[y][x]}||"
     await ctx.send_response(response)
 bot.run(os.getenv('TOKEN')) # run the bot with the token
