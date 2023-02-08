@@ -8,6 +8,7 @@ import ffmpeg
 from dotenv import load_dotenv
 from bing_image_urls import bing_image_urls
 from src.tiktok_module import downloader
+from redvid import Downloader
 import youtube_dl
 
 logging.basicConfig(format='[%(levelname)s] %(message)s', level=logging.INFO)
@@ -15,6 +16,10 @@ load_dotenv() # load all the variables from the env file
 bot = discord.Bot()
 
 cwd = os.getcwd()
+
+reddit = Downloader(max_q=True)
+reddit.log = False
+reddit.path = cwd
 
 # Print the current working directory
 print(f"Current working directory: {cwd}")
@@ -44,7 +49,7 @@ async def ping(ctx):
 @bot.slash_command(
     name = "savetwtvid",
     description = "Saves a video on twitter as an mp4.")
-async def savetwtvid(ctx,link: discord.Option(str)):
+async def savetwtvid(ctx, link: discord.Option(str)):
     if "twitter.com" in link:
         try:
             requestid = random.randint(0, 999999)
@@ -60,6 +65,24 @@ async def savetwtvid(ctx,link: discord.Option(str)):
             \n> the content is age-restricted, \
             \n> the tweet is from a private account, or \
             \n> the link is not a twitter link.")
+
+@bot.slash_command(
+    name = "saveredditvid",
+    description = "Saves a reddit-hosted (not linked) video as an mp4.")
+async def savetwtvid(ctx, link: discord.Option(str)):
+    reddit.url = link
+    try:
+        await ctx.respond("Getting your reddit video...")
+        await ctx.channel.trigger_typing()
+        content = reddit.download()
+        await ctx.send(file=discord.File(content))
+        os.remove(content)
+    except Exception:
+        await ctx.send("Something went wrong. It could be from any of the following: \
+        \n> the video is too long \
+        \n> the content is age-restricted, \
+        \n> the tweet is from a private account, or \
+        \n> the link is not a twitter link.")
 
 @bot.slash_command(
     name = "savetiktok",
@@ -126,6 +149,8 @@ async def compresstwt(ctx, link: discord.Option(str, "Link to video.")):
         os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}unboiled.mp4')
         await ctx.send(file=discord.File(f"{requestid}sc{ctx.author.id}.mp4"))
         os.remove(f'{os.getcwd()}\\{requestid}sc{ctx.author.id}.mp4')
+    else:
+        await ctx.respond("This is not a twitter link.")
 
 @bot.slash_command(name = "upyourass", description = "Would you put this up your ass?")
 async def upyourass(ctx):
